@@ -80,111 +80,87 @@ export function CorteCard({ corte: corteBase }: CorteCardProps) {
   const montoRestante = corte.total - totalAdelantos
 
   return (
-    <Card className={`${corte.finalizado ? "bg-green-50 border-green-200" : ""} w-full max-w-md mx-auto p-2 text-base`}>
-      <CardHeader>
-        <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">{corte.descripcion.charAt(0).toUpperCase()}</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Finalizado
+    <Card className={`${corte.finalizado ? "bg-green-50 border-green-200" : ""} w-full max-w-md mx-auto p-2 text-base shadow-lg rounded-xl transition-all duration-300 md:max-w-lg lg:max-w-2xl`}>
+      <CardHeader className="pb-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
+          <div className="flex flex-col gap-1 w-full">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-2xl font-extrabold text-gray-800 truncate max-w-[120px]">{corte.descripcion.charAt(0).toUpperCase() + corte.descripcion.slice(1)}</span>
+              {corte.finalizado && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1 px-2 py-1 text-xs">
+                  <CheckCircle className="w-4 h-4 mr-1" /> Finalizado
                 </Badge>
-                {corte.finalizado && (
-                  <Printer 
-                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800" 
-                    onClick={() => {
-                      const doc = new jsPDF();
-                      doc.text("Reporte de Corte", 10, 10);
-                      doc.text(`Descripción: ${corte.descripcion}`, 10, 20);
-                      doc.text(`Fecha de entrega: ${formatDate(corte.fechaCreacion || "")}`, 10, 30);
-                      doc.text(`Fecha de empezar: ${formatDateTime(corte.fechaEmpezar || "")}`, 10, 40);
-                      doc.text(`Fecha de finalización: ${formatDateTime(corte.fechaFinalizacion || "")}`, 10, 50);
-                      doc.text(`Duración (inicio a fin): ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 60);
-                      doc.text(`Monto total: S/ ${corte.total.toLocaleString("es-PE")}`, 10, 70);
-                      doc.text(`Monto restante: S/ ${montoRestante.toLocaleString("es-PE")}`, 10, 80);
-                      doc.text(`Adelantos:`, 10, 90);
-                      corte.adelantos.forEach((a: any, idx: number) => {
-                        doc.text(`- S/ ${a.valor} - ${a.descripcion || "Sin descripción"} - ${formatDateTime(a.fecha || "")}`, 12, 100 + idx * 10);
-                      });
-                      doc.text(`Tiempo de demora: ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 110 + corte.adelantos.length * 10);
-                      doc.save("reporte-corte.pdf");
-                    }}
-                  />
-                )}
-              </div>
-              <div className="text-sm text-gray-500">
-                {formatDate(corte.fechaCreacion)}
-              </div>
+              )}
+              {corte.finalizado && (
+                <Printer 
+                  className="w-5 h-5 text-gray-600 cursor-pointer hover:text-gray-900 ml-1" 
+                  onClick={() => {
+                    const doc = new jsPDF();
+                    doc.text("Reporte de Corte", 10, 10);
+                    doc.text(`Descripción: ${corte.descripcion}`, 10, 20);
+                    doc.text(`Fecha de entrega: ${formatDate(corte.fechaCreacion || "")}`, 10, 30);
+                    doc.text(`Fecha de empezar: ${formatDateTime(corte.fechaEmpezar || "")}`, 10, 40);
+                    doc.text(`Fecha de finalización: ${formatDateTime(corte.fechaFinalizacion || "")}`, 10, 50);
+                    doc.text(`Duración (inicio a fin): ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 60);
+                    doc.text(`Monto total: S/ ${corte.total.toLocaleString("es-PE")}`, 10, 70);
+                    doc.text(`Monto restante: S/ ${montoRestante.toLocaleString("es-PE")}`, 10, 80);
+                    doc.text(`Adelantos:`, 10, 90);
+                    corte.adelantos.forEach((a: any, idx: number) => {
+                      doc.text(`- S/ ${a.valor} - ${a.descripcion || "Sin descripción"} - ${formatDateTime(a.fecha || "")}`, 12, 100 + idx * 10);
+                    });
+                    doc.text(`Tiempo de demora: ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 110 + corte.adelantos.length * 10);
+                    doc.save("reporte-corte.pdf");
+                  }}
+                />
+              )}
             </div>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                {formatDate(corte.fechaCreacion)}
-              </span>
-              <span>Cantidad: {corte.cantidad}</span>
-              <span>Valor: S/ {corte.valor.toLocaleString("es-PE")}</span>
+            <div className="flex flex-wrap gap-2 text-xs text-gray-500 mt-1">
+              <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{formatDate(corte.fechaCreacion)}</span>
+              <span>Cantidad: <b>{corte.cantidad}</b></span>
+              <span>Valor: <b>S/ {corte.valor.toLocaleString("es-PE")}</b></span>
             </div>
           </div>
         </div>
       </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+      <CardContent className="space-y-4 pt-0">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 p-3 bg-gray-50 rounded-lg shadow-sm">
           <div className="text-center">
-            <p className="text-sm text-gray-600">Total</p>
-            <p className="text-xl font-bold text-gray-900">S/ {corte.total.toLocaleString("es-PE")}</p>
+            <p className="text-xs text-gray-500">Total</p>
+            <p className="text-lg font-bold text-gray-900">S/ {corte.total.toLocaleString("es-PE")}</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">Adelantos</p>
-            <p className="text-xl font-bold text-blue-600">S/ {totalAdelantos.toLocaleString("es-PE")}</p>
+            <p className="text-xs text-gray-500">Adelantos</p>
+            <p className="text-lg font-bold text-blue-600">S/ {totalAdelantos.toLocaleString("es-PE")}</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">Restante</p>
-            <p className={`text-xl font-bold ${montoRestante > 0 ? "text-orange-600" : "text-green-600"}`}>
-              S/ {montoRestante.toLocaleString("es-PE")}
-            </p>
+            <p className="text-xs text-gray-500">Restante</p>
+            <p className={`text-lg font-bold ${montoRestante > 0 ? "text-orange-600" : "text-green-600"}`}>S/ {montoRestante.toLocaleString("es-PE")}</p>
           </div>
         </div>
-
         {corte.adelantos.length > 0 && <AdelantosList adelantos={corte.adelantos} />}
-
         {!corte.finalizado && (
-          <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => setShowAdelantoForm(true)} className="flex-1">
-              <Plus className="w-4 h-4 mr-2" />
-              Añadir Adelanto
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setShowAdelantoForm(true)} className="w-full sm:w-auto">
+              <Plus className="w-4 h-4 mr-2" /> Añadir Adelanto
             </Button>
-            {/* Mostrar botón Finalizar solo si el corte fue iniciado y no está finalizado */}
             {corte.fechaEmpezar && !corte.finalizado && (
-              <Button
-                onClick={handleFinalizarCorte}
-                disabled={loading}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                <Check className="w-4 h-4 mr-2" />
-                {loading ? "Finalizando..." : "Finalizar"}
+              <Button onClick={handleFinalizarCorte} disabled={loading} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white">
+                <Check className="w-4 h-4 mr-2" /> {loading ? "Finalizando..." : "Finalizar"}
               </Button>
             )}
-            {/* Botón para iniciar corte si no tiene fechaEmpezar */}
             {!corte.fechaEmpezar && !corte.finalizado && (
-              <Button onClick={handleIniciarCorte} disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={handleIniciarCorte} disabled={loading} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white">
                 Iniciar Corte
               </Button>
             )}
-            {/* Mostrar fecha de empezar si existe */}
-            {corte.fechaEmpezar && (
-              <div className="text-sm text-gray-600 mt-2">
-                <b>Fecha de empezar:</b> {formatDateTime(corte.fechaEmpezar || "")}
-              </div>
-            )}
-            <Button variant="outline" onClick={() => setShowEditModal(true)} className="flex-1">
+            <Button variant="outline" onClick={() => setShowEditModal(true)} className="w-full sm:w-auto">
               Editar
             </Button>
           </div>
         )}
-
+        {corte.fechaEmpezar && (
+          <div className="text-xs text-gray-600 mt-2"><b>Fecha de empezar:</b> {formatDateTime(corte.fechaEmpezar || "")}</div>
+        )}
         {showAdelantoForm && <AdelantoForm corteId={corte.id} onClose={() => setShowAdelantoForm(false)} />}
         {showEditModal && (
           <CorteForm onClose={() => setShowEditModal(false)} corte={corte} modoEdicion={true} />
@@ -192,7 +168,7 @@ export function CorteCard({ corte: corteBase }: CorteCardProps) {
       </CardContent>
       {showReporteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-lg p-4 max-w-sm w-full text-sm overflow-y-auto max-h-[90vh]">
+          <div className="bg-white rounded-lg p-4 max-w-sm w-full text-sm overflow-y-auto max-h-[90vh] shadow-xl">
             <h2 className="text-lg font-bold mb-4">Reporte de Corte</h2>
             <div className="space-y-2 text-sm">
               <p><b>Descripción:</b> {corte.descripcion}</p>
