@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { doc, updateDoc, arrayUnion } from "firebase/firestore"
+import { doc, updateDoc, arrayUnion, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 interface AdelantoFormProps {
@@ -78,7 +78,7 @@ export function AdelantoForm({ corteId, onClose }: AdelantoFormProps) {
       const nuevoAdelanto = {
         id: Date.now().toString(), // ID simple para el adelanto dentro del array
         valor: valorNum,
-        fecha,
+        fecha: Timestamp.fromDate(new Date()), // Usar Timestamp de Firestore en formato peruano
         descripcion: descripcion.trim(),
         foto: fotoUrl
       }

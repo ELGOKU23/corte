@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, Plus, Check } from "lucide-react"
+import { Calendar, Plus, Check, CheckCircle, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -82,16 +82,41 @@ export function CorteCard({ corte: corteBase }: CorteCardProps) {
   return (
     <Card className={`${corte.finalizado ? "bg-green-50 border-green-200" : ""} w-full max-w-md mx-auto p-2 text-base`}>
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <CardTitle className="text-lg">{corte.descripcion}</CardTitle>
-              {corte.finalizado && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">{corte.descripcion.charAt(0).toUpperCase()}</span>
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <Check className="w-3 h-3 mr-1" />
+                  <CheckCircle className="w-3 h-3 mr-1" />
                   Finalizado
                 </Badge>
-              )}
+                {corte.finalizado && (
+                  <Printer 
+                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800" 
+                    onClick={() => {
+                      const doc = new jsPDF();
+                      doc.text("Reporte de Corte", 10, 10);
+                      doc.text(`Descripción: ${corte.descripcion}`, 10, 20);
+                      doc.text(`Fecha de entrega: ${formatDate(corte.fechaCreacion || "")}`, 10, 30);
+                      doc.text(`Fecha de empezar: ${formatDateTime(corte.fechaEmpezar || "")}`, 10, 40);
+                      doc.text(`Fecha de finalización: ${formatDateTime(corte.fechaFinalizacion || "")}`, 10, 50);
+                      doc.text(`Duración (inicio a fin): ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 60);
+                      doc.text(`Monto total: S/ ${corte.total.toLocaleString("es-PE")}`, 10, 70);
+                      doc.text(`Monto restante: S/ ${montoRestante.toLocaleString("es-PE")}`, 10, 80);
+                      doc.text(`Adelantos:`, 10, 90);
+                      corte.adelantos.forEach((a: any, idx: number) => {
+                        doc.text(`- S/ ${a.valor} - ${a.descripcion || "Sin descripción"} - ${formatDateTime(a.fecha || "")}`, 12, 100 + idx * 10);
+                      });
+                      doc.text(`Tiempo de demora: ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 110 + corte.adelantos.length * 10);
+                      doc.save("reporte-corte.pdf");
+                    }}
+                  />
+                )}
+              </div>
+              <div className="text-sm text-gray-500">
+                {formatDate(corte.fechaCreacion)}
+              </div>
             </div>
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <span className="flex items-center gap-1">
@@ -167,27 +192,30 @@ export function CorteCard({ corte: corteBase }: CorteCardProps) {
       </CardContent>
       {showReporteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-lg p-4 max-w-sm w-full text-base">
-            <h2 className="text-xl font-bold mb-4">Reporte de Corte</h2>
-            <p><b>Descripción:</b> {corte.descripcion}</p>
-            <p><b>Fecha de entrega:</b> {formatDate(corte.fechaCreacion || "")}</p>
-            <p><b>Fecha de empezar:</b> {formatDateTime(corte.fechaEmpezar || "")}</p>
-            <p><b>Fecha de finalización:</b> {formatDateTime(corte.fechaFinalizacion || "")}</p>
-            <p><b>Duración (inicio a fin):</b> {corte.fechaEmpezar && corte.fechaFinalizacion ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}</p>
-            <p><b>Monto total:</b> S/ {corte.total.toLocaleString("es-PE")}</p>
-            <p><b>Monto restante:</b> S/ {montoRestante.toLocaleString("es-PE")}</p>
-            <p><b>Adelantos:</b></p>
-            <ul className="mb-2">
-              {corte.adelantos.map((a: any) => (
-                <li key={a.id}>
-                  S/ {a.valor} - {a.descripcion || "Sin descripción"} - {formatDateTime(a.fecha || "")}
-                </li>
-              ))}
-            </ul>
-            <p><b>Tiempo de demora:</b> {corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}</p>
-            <div className="flex gap-2 mt-4">
-              <Button onClick={() => setShowReporteModal(false)} variant="outline">Cerrar</Button>
-              {/* En el modal de reporte, el botón Imprimir PDF ya está presente si el corte está finalizado. */}
+          <div className="bg-white rounded-lg p-4 max-w-sm w-full text-sm overflow-y-auto max-h-[90vh]">
+            <h2 className="text-lg font-bold mb-4">Reporte de Corte</h2>
+            <div className="space-y-2 text-sm">
+              <p><b>Descripción:</b> {corte.descripcion}</p>
+              <p><b>Fecha de entrega:</b> {formatDate(corte.fechaCreacion || "")}</p>
+              <p><b>Fecha de empezar:</b> {formatDateTime(corte.fechaEmpezar || "")}</p>
+              <p><b>Fecha de finalización:</b> {formatDateTime(corte.fechaFinalizacion || "")}</p>
+              <p><b>Duración (inicio a fin):</b> {corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}</p>
+              <p><b>Monto total:</b> S/ {corte.total.toLocaleString("es-PE")}</p>
+              <p><b>Monto restante:</b> S/ {montoRestante.toLocaleString("es-PE")}</p>
+              <p><b>Adelantos:</b></p>
+              <ul className="mb-2 text-xs">
+                {corte.adelantos.map((a: any) => (
+                  <li key={a.id} className="mb-1">
+                    S/ {a.valor} - {a.descripcion || "Sin descripción"} - {formatDateTime(a.fecha || "")}
+                  </li>
+                ))}
+              </ul>
+              <p><b>Tiempo de demora:</b> {corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}</p>
+            </div>
+            <div className="flex flex-col gap-2 mt-4 w-full">
+              <Button onClick={() => setShowReporteModal(false)} variant="outline" className="w-full">
+                Cerrar
+              </Button>
               <Button
                 onClick={() => {
                   const doc = new jsPDF();
@@ -196,7 +224,7 @@ export function CorteCard({ corte: corteBase }: CorteCardProps) {
                   doc.text(`Fecha de entrega: ${formatDate(corte.fechaCreacion || "")}`, 10, 30);
                   doc.text(`Fecha de empezar: ${formatDateTime(corte.fechaEmpezar || "")}`, 10, 40);
                   doc.text(`Fecha de finalización: ${formatDateTime(corte.fechaFinalizacion || "")}`, 10, 50);
-                  doc.text(`Duración (inicio a fin): ${corte.fechaEmpezar && corte.fechaFinalizacion ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 60);
+                  doc.text(`Duración (inicio a fin): ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 60);
                   doc.text(`Monto total: S/ ${corte.total.toLocaleString("es-PE")}`, 10, 70);
                   doc.text(`Monto restante: S/ ${montoRestante.toLocaleString("es-PE")}`, 10, 80);
                   doc.text(`Adelantos:`, 10, 90);
@@ -206,7 +234,7 @@ export function CorteCard({ corte: corteBase }: CorteCardProps) {
                   doc.text(`Tiempo de demora: ${corte.fechaEmpezar && corte.fechaFinalizacion && formatDateTime(corte.fechaEmpezar) !== "-" && formatDateTime(corte.fechaFinalizacion) !== "-" ? `${Math.round((new Date(formatDateTime(corte.fechaFinalizacion || "")).getTime() - new Date(formatDateTime(corte.fechaEmpezar || "")).getTime()) / (1000 * 60 * 60 * 24))} días` : "-"}`, 10, 110 + corte.adelantos.length * 10);
                   doc.save("reporte-corte.pdf");
                 }}
-                className="flex-1 bg-gray-700 hover:bg-gray-900 text-white mt-2 w-full"
+                className="w-full bg-gray-700 hover:bg-gray-900 text-white mt-2"
               >
                 Imprimir PDF
               </Button>
