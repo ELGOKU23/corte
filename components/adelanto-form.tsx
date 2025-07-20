@@ -127,7 +127,7 @@ export function AdelantoForm({ corteId, onClose }: AdelantoFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <Card className="w-full max-w-xs mx-auto p-2 max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Nuevo Adelanto</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -188,6 +188,7 @@ export function AdelantoForm({ corteId, onClose }: AdelantoFormProps) {
                   id="foto"
                   type="file"
                   accept="image/*"
+                  capture="environment"
                   onChange={handleFileChange}
                   className="hidden"
                   disabled={loading}
@@ -196,11 +197,11 @@ export function AdelantoForm({ corteId, onClose }: AdelantoFormProps) {
                   type="button"
                   variant="outline"
                   onClick={() => document.getElementById("foto")?.click()}
-                  className="w-full"
+                  className="w-full flex items-center justify-center gap-2"
                   disabled={loading}
                 >
                   <Camera className="w-4 h-4 mr-2" />
-                  {foto ? "Cambiar Foto" : "Seleccionar Foto"}
+                  Tomar o elegir foto
                 </Button>
 
                 {previewUrl && (
