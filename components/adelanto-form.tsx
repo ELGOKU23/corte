@@ -9,9 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { db, storage } from "@/lib/firebase"
+import { doc, updateDoc, arrayUnion } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 interface AdelantoFormProps {
   corteId: string
@@ -58,18 +57,22 @@ export function AdelantoForm({ corteId, onClose }: AdelantoFormProps) {
 
       let fotoUrl = ""
 
-      // Timeout para la subida de la foto
-      const uploadTimeoutPromise = new Promise(
-        (_, reject) => setTimeout(() => reject(new Error("Timeout: La subida de la foto tardó demasiado")), 30000), // 30 segundos para fotos
-      )
-
       if (foto) {
-        console.log("Subiendo foto a Firebase Storage...")
-        const fotoRef = ref(storage, `adelantos/${corteId}/${Date.now()}_${foto.name}`)
-        const uploadPromise = uploadBytes(fotoRef, foto)
-        const snapshot = await Promise.race([uploadPromise, uploadTimeoutPromise])
-        fotoUrl = await getDownloadURL(snapshot.ref)
-        console.log("✅ Foto subida:", fotoUrl)
+        console.log("Subiendo foto a Cloudinary...");
+        const url = 'https://api.cloudinary.com/v1_1/duruqbipv/image/upload';
+        const formData = new FormData();
+        formData.append('file', foto);
+        formData.append('upload_preset', 'ml_default'); // Nombre exacto del preset sin firmar
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error('Error al subir la imagen a Cloudinary');
+        const data = await response.json();
+        fotoUrl = data.secure_url;
+        console.log("✅ Foto subida a Cloudinary:", fotoUrl);
       }
 
       const nuevoAdelanto = {
@@ -77,8 +80,7 @@ export function AdelantoForm({ corteId, onClose }: AdelantoFormProps) {
         valor: valorNum,
         fecha,
         descripcion: descripcion.trim(),
-        foto: fotoUrl,
-        timestamp: serverTimestamp(), // Añadir timestamp para el adelanto
+        foto: fotoUrl
       }
 
       console.log("Añadiendo adelanto al corte:", nuevoAdelanto)

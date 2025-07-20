@@ -8,7 +8,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAboV2MQ27MYK5RkoLUbAd36rQuBfw69xY",
   authDomain: "cortes-4fcf9.firebaseapp.com",
   projectId: "cortes-4fcf9",
-  storageBucket: "cortes-4fcf9.firebasestorage.app",
+  storageBucket: "cortes-4fcf9.appspot.com",
   messagingSenderId: "273826504341",
   appId: "1:273826504341:web:f84449a48afdf64356059c", // App ID actualizado
   measurementId: "G-WK78L3C431", // Measurement ID actualizado

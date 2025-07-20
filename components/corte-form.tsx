@@ -9,17 +9,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 interface CorteFormProps {
   onClose: () => void
+  corte?: any // Permitir pasar un corte existente para edición
+  modoEdicion?: boolean
 }
 
-export function CorteForm({ onClose }: CorteFormProps) {
-  const [cantidad, setCantidad] = useState("")
-  const [valor, setValor] = useState("")
-  const [descripcion, setDescripcion] = useState("")
+export function CorteForm({ onClose, corte, modoEdicion }: CorteFormProps) {
+  const [cantidad, setCantidad] = useState(corte ? corte.cantidad.toString() : "")
+  const [valor, setValor] = useState(corte ? corte.valor.toString() : "")
+  const [descripcion, setDescripcion] = useState(corte ? corte.descripcion : "")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -51,29 +53,41 @@ export function CorteForm({ onClose }: CorteFormProps) {
 
       const total = cantidadNum * valorNum
 
-      const nuevoCorte = {
-        cantidad: cantidadNum,
-        valor: valorNum,
-        descripcion: descripcion.trim(),
-        total,
-        adelantos: [],
-        fechaCreacion: serverTimestamp(), // Usa serverTimestamp para la fecha
-        finalizado: false,
-        montoRestante: total,
+      if (modoEdicion && corte) {
+        // Actualizar corte existente
+        const docRef = doc(db, "cortes", corte.id)
+        await updateDoc(docRef, {
+          cantidad: cantidadNum,
+          valor: valorNum,
+          descripcion: descripcion.trim(),
+          total,
+        })
+      } else {
+        // Crear nuevo corte
+        const nuevoCorte = {
+          cantidad: cantidadNum,
+          valor: valorNum,
+          descripcion: descripcion.trim(),
+          total,
+          adelantos: [],
+          fechaCreacion: serverTimestamp(), // Usa serverTimestamp para la fecha
+          finalizado: false,
+          montoRestante: total,
+        }
+
+        console.log("Datos del nuevo corte a guardar:", nuevoCorte)
+
+        // Configura un timeout para la operación de guardado
+        const timeoutPromise = new Promise(
+          (_, reject) => setTimeout(() => reject(new Error("Timeout: La operación de guardado tardó demasiado")), 15000), // Aumentado a 15 segundos
+        )
+
+        console.log("Intentando añadir documento a Firestore...")
+        const savePromise = addDoc(collection(db, "cortes"), nuevoCorte)
+
+        const docRef = await Promise.race([savePromise, timeoutPromise])
+        console.log("✅ Documento de corte añadido con ID:", docRef.id)
       }
-
-      console.log("Datos del nuevo corte a guardar:", nuevoCorte)
-
-      // Configura un timeout para la operación de guardado
-      const timeoutPromise = new Promise(
-        (_, reject) => setTimeout(() => reject(new Error("Timeout: La operación de guardado tardó demasiado")), 15000), // Aumentado a 15 segundos
-      )
-
-      console.log("Intentando añadir documento a Firestore...")
-      const savePromise = addDoc(collection(db, "cortes"), nuevoCorte)
-
-      const docRef = await Promise.race([savePromise, timeoutPromise])
-      console.log("✅ Documento de corte añadido con ID:", docRef.id)
 
       // Pequeña pausa para asegurar que se complete la escritura antes de cerrar el formulario
       await new Promise((resolve) => setTimeout(resolve, 500))
@@ -196,9 +210,7 @@ export function CorteForm({ onClose }: CorteFormProps) {
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Guardando...
                   </div>
-                ) : (
-                  "Crear Corte"
-                )}
+                ) : modoEdicion ? "Guardar Cambios" : "Crear Corte"}
               </Button>
             </div>
           </form>
